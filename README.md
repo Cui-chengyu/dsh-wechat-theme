@@ -29,23 +29,25 @@
 
 ## 安装
 
-插件放在 `C:\Users\23140\Documents\deepseek-harness\default-workspace\dsh-wechat-theme`，
-已经以 `link:` 方式装进 `desktop` profile：
-
-```powershell
-$env:ELECTRON_RUN_AS_NODE=1
-& "D:\deepseek\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add `
-  "link:C:/Users/23140/Documents/deepseek-harness/default-workspace/dsh-wechat-theme"
+```sh
+dsh plugin --profile desktop add github:Cui-chengyu/dsh-wechat-theme
 ```
 
-`link:` 意味着改 `client.js` 就是改线上代码，不需要重新安装。
+装完刷新一次界面。市场收录后也可以直接在 Harness 的「插件」页面里搜索
+`dsh-wechat-theme` 一键安装。
+
+本地开发时用 `link:` 指向克隆下来的目录，改 `client.js` 就是改线上代码，不用重装：
+
+```sh
+dsh plugin --profile desktop add "link:<你克隆下来的目录>"
+```
 
 ## 开发与生效
 
 Harness 的浏览器端插件在页面启动时**冻结**脚本清单，改完 `client.js` 后光刷新页面
 不会加载新代码，要让插件行重新注册一次：
 
-1. 在 `C:\Users\23140\.dsh\profiles\desktop\cordis.patch.yml` 末尾临时加上
+1. 在 profile 的 `cordis.patch.yml`（`~/.dsh/profiles/desktop/cordis.patch.yml`）末尾临时加上
 
    ```yaml
    - id: dsh-wechat-theme
@@ -66,6 +68,8 @@ cordis.patch.yml    # 往 profile 里插入 dsh-wechat-theme 这一行
 index.js            # 宿主半边：什么都不做，只声明插件名
 client.js           # 浏览器半边：一张样式表 + 空气泡探测器
 icon.svg            # 插件列表里的图标
+assets/             # 图标位图与效果截图
+screenshots.json    # 告诉插件市场详情页展示哪几张截图
 ```
 
 `client.js` 用 `window.__ModuleLoader__.load({ id, factory })` 注册，`apply(ctx)` 里用
@@ -79,9 +83,8 @@ DOM 变了再量一次，气泡自己回来。
 
 ## 卸载
 
-```powershell
-$env:ELECTRON_RUN_AS_NODE=1
-& "D:\deepseek\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop remove dsh-wechat-theme
+```sh
+dsh plugin --profile desktop remove dsh-wechat-theme
 ```
 
 然后按一次刷新按钮（或重启 Harness），界面回到默认外观。
@@ -90,9 +93,9 @@ $env:ELECTRON_RUN_AS_NODE=1
 
 只改外观，不改行为：不拦截事件、不改 DOM、不加按钮、不碰会话数据。
 样式选择器依赖 Harness 的 CSS 模块类名后缀（如 `.xMeOpW_root`、`.LOmM4q_bubble`），
-这些后缀在同一个大版本内稳定；Harness 升级后如果类名变了，用
-`extracted\dsh\node_modules\@deepseek-ai\dsh-client-ui-chat\lib\client.js` 里的
-`AssistantMarkdown_module_css_default` 之类的映射表核对即可。
+这些后缀在同一个大版本内稳定；Harness 升级后如果类名变了，对照
+`node_modules/@deepseek-ai/dsh-client-ui-chat/lib/client.js` 里的
+`AssistantMarkdown_module_css_default` 之类的映射表即可。
 
 ## License
 
