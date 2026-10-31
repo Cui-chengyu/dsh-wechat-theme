@@ -1,0 +1,51 @@
+{
+  "name": "dsh-wechat-theme",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "把 DeepSeek Harness 的界面换成微信（WeChat）风格：灰白配色、绿色气泡、微信字体与布局。",
+  "license": "MIT",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "theme",
+    "wechat"
+  ],
+  "engines": {
+    "dsh": ">=0.2.0-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cui-chengyu/dsh-wechat-theme.git"
+  },
+  "homepage": "https://github.com/Cui-chengyu/dsh-wechat-theme",
+  "bugs": {
+    "url": "https://github.com/Cui-chengyu/dsh-wechat-theme/issues"
+  }
+}

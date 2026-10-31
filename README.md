@@ -1,1 +1,99 @@
 # dsh-wechat-theme
+
+把 DeepSeek Harness 的网页界面换成**微信**的样子：灰白配色、绿色气泡、绿色发送键、微信式会话列表。
+
+一个纯前端的主题插件，不改动 Harness 自身的任何文件：它在页面里注入一张全局样式表，
+按 Harness 已经暴露的 CSS 变量和稳定的类名后缀覆盖外观。宿主那一半（`index.js`）是空的，
+不占端口、不注册路由、不写文件。
+
+## 效果
+
+![对话界面](assets/screenshot-chat.png)
+
+![已归档会话](assets/screenshot-archived.png)
+
+| 位置 | 微信风格 |
+| --- | --- |
+| 侧边栏 | 微信灰 `#EDEDED`，会话标题一律深色，不再把非当前会话淡出 |
+| 自己的消息 | 绿色气泡 `#95EC69`，右对齐，右上小尖角 |
+| 助手消息 | 白色气泡，左对齐，左侧小尖角；没有可读内容的步骤不显示空气泡 |
+| 发送键 | 微信绿 `#07C160` 圆角按钮 |
+| 输入区 | 白色卡片，微信式圆角与细边框 |
+| 顶部标签 | 对话 / 轨迹 / 上下，选中项绿色下划线 |
+| 已归档会话 | 灰色底色 + 灰标题，右侧「已归档」小标签代替时间，悬停换回操作按钮 |
+| 深色模式 | 跟随 Harness 的深色主题，配色换成深灰 + 亮绿 |
+
+已归档的会话默认被 Harness 藏起来，在侧栏「工作区」标题右侧的筛选菜单里选
+**全部对话（显示已归档）** 才看得到；本主题把这类会话画成灰底灰字，并在时间的位置
+换成一个小「已归档」标签，悬停时标签让位给「取消归档」按钮。
+
+## 安装
+
+插件放在 `C:\Users\23140\Documents\deepseek-harness\default-workspace\dsh-wechat-theme`，
+已经以 `link:` 方式装进 `desktop` profile：
+
+```powershell
+$env:ELECTRON_RUN_AS_NODE=1
+& "D:\deepseek\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add `
+  "link:C:/Users/23140/Documents/deepseek-harness/default-workspace/dsh-wechat-theme"
+```
+
+`link:` 意味着改 `client.js` 就是改线上代码，不需要重新安装。
+
+## 开发与生效
+
+Harness 的浏览器端插件在页面启动时**冻结**脚本清单，改完 `client.js` 后光刷新页面
+不会加载新代码，要让插件行重新注册一次：
+
+1. 在 `C:\Users\23140\.dsh\profiles\desktop\cordis.patch.yml` 末尾临时加上
+
+   ```yaml
+   - id: dsh-wechat-theme
+     disabled: true
+   ```
+
+   稍等 3～5 秒（插件被卸载），再删掉这三行（插件重新装载，按新的修订号取回 `client.js`）。
+
+2. 或者直接按右上角的刷新按钮（`dsh-unlag` 提供），它会在插件重新注册之后重建界面。
+
+想看选中效果，也可以在同样的 profile patch 里把主题行去掉，等几秒再放回去。
+
+## 结构
+
+```
+package.json        # dsh.bundle.patch + dsh.client 清单
+cordis.patch.yml    # 往 profile 里插入 dsh-wechat-theme 这一行
+index.js            # 宿主半边：什么都不做，只声明插件名
+client.js           # 浏览器半边：一张样式表 + 空气泡探测器
+icon.svg            # 插件列表里的图标
+```
+
+`client.js` 用 `window.__ModuleLoader__.load({ id, factory })` 注册，`apply(ctx)` 里用
+`ctx.effect` 挂一个 `<style data-plugin-css="dsh-wechat-theme">`，卸载时移除。
+所有安装动作都包在 `try/catch` 里：主题挂掉不能把整个界面带下水。
+
+空气泡探测器是一个 `MutationObserver`：Harness 给每一个「只有工具调用、没有文字回答」的
+步骤也渲染一个助手气泡，里面只剩被隐藏的思考行，气泡宽度等于自身内边距（≤ 30px）。
+量到这种气泡就打个 `data-wx-empty` 标记，样式表把它隐藏；等真有文字流进来、
+DOM 变了再量一次，气泡自己回来。
+
+## 卸载
+
+```powershell
+$env:ELECTRON_RUN_AS_NODE=1
+& "D:\deepseek\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop remove dsh-wechat-theme
+```
+
+然后按一次刷新按钮（或重启 Harness），界面回到默认外观。
+
+## 范围
+
+只改外观，不改行为：不拦截事件、不改 DOM、不加按钮、不碰会话数据。
+样式选择器依赖 Harness 的 CSS 模块类名后缀（如 `.xMeOpW_root`、`.LOmM4q_bubble`），
+这些后缀在同一个大版本内稳定；Harness 升级后如果类名变了，用
+`extracted\dsh\node_modules\@deepseek-ai\dsh-client-ui-chat\lib\client.js` 里的
+`AssistantMarkdown_module_css_default` 之类的映射表核对即可。
+
+## License
+
+MIT
