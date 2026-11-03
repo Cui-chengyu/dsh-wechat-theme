@@ -10,7 +10,7 @@
 
 ![对话界面](assets/screenshot-chat.png)
 
-![已归档会话](assets/screenshot-archived.png)
+![气泡细节](assets/screenshot-bubbles.png)
 
 | 位置 | 微信风格 |
 | --- | --- |
